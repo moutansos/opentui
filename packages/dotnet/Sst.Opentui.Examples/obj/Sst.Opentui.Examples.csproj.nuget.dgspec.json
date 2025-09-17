@@ -1,0 +1,118 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Examples/Sst.Opentui.Examples.csproj": {}
+  },
+  "projects": {
+    "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/Sst.Opentui.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/Sst.Opentui.Core.csproj",
+        "projectName": "Sst.Opentui.Core",
+        "projectPath": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/Sst.Opentui.Core.csproj",
+        "packagesPath": "/home/ben/.nuget/packages/",
+        "outputPath": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/ben/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Examples/Sst.Opentui.Examples.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Examples/Sst.Opentui.Examples.csproj",
+        "projectName": "Sst.Opentui.Examples",
+        "projectPath": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Examples/Sst.Opentui.Examples.csproj",
+        "packagesPath": "/home/ben/.nuget/packages/",
+        "outputPath": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Examples/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/ben/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/Sst.Opentui.Core.csproj": {
+                "projectPath": "/home/ben/source/repos/opentui/packages/dotnet/Sst.Opentui.Core/Sst.Opentui.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
