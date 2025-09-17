@@ -32,23 +32,23 @@ public class CliRenderer
   private IEnumerable<int> frameTimes;
   private int maxStatSamples = 300;
   // private IEnumerable<Action<OptomizedBuffer, int>> postProcessFns;
-  // private Rgba backgroundColor;
+  private Rgba backgroundColor;
 
-  protected CliRenderer(
-    StreamReader stdin,
-    StreamWriter stdout
-  ) {
-    this.isDestroyed = false;
-    this.isRunning = false;
-    this.targetFps = 30;
-    this.lastMemorySnapshot = new MemorySnapshot
-    {
-      heapUsed = 0,
-      heapTotal = 0,
-      arryayBuffers = 0
-    };
-    this.useThread = false;
-    this.frameTimes = Enumerable.Empty<int>();
-    this.postProcessFns = Enumerable.Empty<Action<OptomizedBuffer, int>>();
-  }
+  // protected CliRenderer(
+  //   StreamReader stdin,
+  //   StreamWriter stdout
+  // ) {
+  //   this.isDestroyed = false;
+  //   this.isRunning = false;
+  //   this.targetFps = 30;
+  //   this.lastMemorySnapshot = new MemorySnapshot
+  //   {
+  //     heapUsed = 0,
+  //     heapTotal = 0,
+  //     arryayBuffers = 0
+  //   };
+  //   this.useThread = false;
+  //   this.frameTimes = Enumerable.Empty<int>();
+  //   this.postProcessFns = Enumerable.Empty<Action<OptomizedBuffer, int>>();
+  // }
 }

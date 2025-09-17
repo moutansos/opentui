@@ -1,9 +1,29 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../core/src/zig/lib/x86_64-windows/*.dll" Pack="true" PackagePath="runtimes/win-x64/native" />
+    <None Include="../../core/src/zig/lib/aarch64-windows/*.dll" Pack="true" PackagePath="runtimes/win-arm64/native" />
+    <None Include="../../core/src/zig/lib/x86_64-linux/*.so" Pack="true" PackagePath="runtimes/linux-x64/native" />
+    <None Include="../../core/src/zig/lib/aarch64-linux/*.so" Pack="true" PackagePath="runtimes/linux-arm64/native" />
+    <None Include="../../core/src/zig/lib/x86_64-macos/*.dylib" Pack="true" PackagePath="runtimes/osx-x64/native" />
+    <None Include="../../core/src/zig/lib/aarch64-macos/*.dylib" Pack="true" PackagePath="runtimes/osx-arm64/native" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../core/src/zig/lib/x86_64-windows/*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-windows/*.dll" Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/x86_64-macos/*.dylib" Condition="$([MSBuild]::IsOSPlatform('MacOS')) and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-macos/*.dylib" Condition="$([MSBuild]::IsOSPlatform('MacOS')) and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/x86_64-linux/*.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-linux/*.so" Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>

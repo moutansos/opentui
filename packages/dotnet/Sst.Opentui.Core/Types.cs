@@ -1,0 +1,176 @@
+using System;
+using System.Text.RegularExpressions;
+
+namespace Sst.Opentui.Core;
+
+public class Rgba
+{
+  private float[] buffer;
+
+  public Rgba(float[] buffer)
+  {
+    this.buffer = buffer;
+  }
+
+  public static Rgba FromArray(float[] arr) => new Rgba(arr);
+  public static Rgba FromValues(float r, float g, float b, float a = 1.0f) => new(new float[] { r, g, b, a });
+  public static Rgba FromInts(int r, int g, int b, int a = 255) => new(new float[] { r / 255f, g / 255f, b / 255f, a / 255f });
+  public static Rgba FromHex(string hex) => throw new NotImplementedException();
+
+  public (int r, int g, int b, int a) ToInts()
+  {
+    return (
+        (int)Math.Round(this.buffer[0] * 255),
+        (int)Math.Round(this.buffer[1] * 255),
+        (int)Math.Round(this.buffer[2] * 255),
+        (int)Math.Round(this.buffer[3] * 255)
+    );
+  }
+
+  public float R
+  {
+    get => this.buffer[0];
+    set => this.buffer[0] = value;
+  }
+
+  public float G
+  {
+    get => this.buffer[1];
+    set => this.buffer[1] = value;
+  }
+
+  public float B
+  {
+    get => this.buffer[2];
+    set => this.buffer[2] = value;
+  }
+
+  public float A
+  {
+    get => this.buffer[3];
+    set => this.buffer[3] = value;
+  }
+
+  public R[] Map<R>(Func<float, R> fn) =>
+    new R[] { fn(this.buffer[0]), fn(this.buffer[1]), fn(this.buffer[2]), fn(this.buffer[3]) };
+
+  public override string ToString() => $"rgba({this.buffer[0]:F2}, {this.buffer[1]:F2}, {this.buffer[2]:F2}, {this.buffer[3]})";
+
+  public static Rgba HexToRgb(string hex)
+  {
+    hex = hex.Replace("#", "");
+
+    if (hex.Length == 3)
+    {
+      hex = string.Concat(hex[0], hex[0], hex[1], hex[1], hex[2], hex[2]);
+    }
+
+    // Check for bad format with regex
+    if (Regex.IsMatch(hex, @"^[0-9A-Fa-f]{6}$") == false)
+    {
+      Console.WriteLine($"Invalid hex color: {hex}, defaulting to magenta");
+      return Rgba.FromValues(1, 0, 1, 1);
+    }
+
+    float r = Convert.ToInt32(hex.Substring(0, 2), 16) / 255f;
+    float g = Convert.ToInt32(hex.Substring(2, 2), 16) / 255f;
+    float b = Convert.ToInt32(hex.Substring(4, 2), 16) / 255f;
+
+    return Rgba.FromValues(r, g, b, 1);
+  }
+
+  public static string RgbToHex(Rgba color)
+  {
+    var (r, g, b, a) = color.ToInts();
+    return $"#{r:X2}{g:X2}{b:X2}";
+  }
+
+  public static Rgba HsvToRgb(float h, float s, float v)
+  {
+
+    float r = 0, g = 0, b = 0;
+
+    int i = (int)Math.Floor(h * 6);
+    float f = h * 6 - i;
+    float p = v * (1 - s);
+    float q = v * (1 - f * s);
+    float t = v * (1 - (1 - f) * s);
+
+    switch (i % 6)
+    {
+      case 0:
+        r = v; g = t; b = p;
+        break;
+      case 1:
+        r = q; g = v; b = p;
+        break;
+      case 2:
+        r = p; g = v; b = t;
+        break;
+      case 3:
+        r = p; g = q; b = v;
+        break;
+      case 4:
+        r = t; g = p; b = v;
+        break;
+      case 5:
+        r = v; g = p; b = q;
+        break;
+    }
+
+    return Rgba.FromValues(r, g, b, 1);
+  }
+
+  private static readonly Dictionary<string, string> CSS_COLOR_NAMES = new()
+  {
+    ["black"] = "#000000",
+    ["white"] = "#FFFFFF",
+    ["red"] = "#FF0000",
+    ["green"] = "#008000",
+    ["blue"] = "#0000FF",
+    ["yellow"] = "#FFFF00",
+    ["cyan"] = "#00FFFF",
+    ["magenta"] = "#FF00FF",
+    ["silver"] = "#C0C0C0",
+    ["gray"] = "#808080",
+    ["grey"] = "#808080",
+    ["maroon"] = "#800000",
+    ["olive"] = "#808000",
+    ["lime"] = "#00FF00",
+    ["aqua"] = "#00FFFF",
+    ["teal"] = "#008080",
+    ["navy"] = "#000080",
+    ["fuchsia"] = "#FF00FF",
+    ["purple"] = "#800080",
+    ["orange"] = "#FFA500",
+    ["brightblack"] = "#666666",
+    ["brightred"] = "#FF6666",
+    ["brightgreen"] = "#66FF66",
+    ["brightblue"] = "#6666FF",
+    ["brightyellow"] = "#FFFF66",
+    ["brightcyan"] = "#66FFFF",
+    ["brightmagenta"] = "#FF66FF",
+    ["brightwhite"] = "#FFFFFF",
+  };
+
+  public static Rgba ParseColor(string colorString)
+  {
+    string color = colorString.Trim().ToLower();
+
+    if (color == "trasparent")
+      return Rgba.FromValues(0, 0, 0, 0);
+
+    if (CSS_COLOR_NAMES.ContainsKey(color))
+      return HexToRgb(CSS_COLOR_NAMES[color]);
+    if (Regex.IsMatch(color, @"^#([0-9A-Fa-f]{3}){1,2}$"))
+      return HexToRgb(color);
+
+    throw new ArgumentException($"Unknown color format: {colorString}");
+  }
+}
+
+public enum WidthMethod
+{
+  ArcWidth = 0,
+  Unicode = 1,
+}
