@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Sst.Opentui.Examples")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+177feac6317f82877870dab8571554d1e0a7af6f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a87a39908687a2abc8b3041c3e27d836b10f5015")]
 [assembly: System.Reflection.AssemblyProductAttribute("Sst.Opentui.Examples")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Sst.Opentui.Examples")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
