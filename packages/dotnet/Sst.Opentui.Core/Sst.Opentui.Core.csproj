@@ -7,7 +7,8 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <Arch>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</Arch>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,16 +21,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="../../core/src/zig/lib/x86_64-windows/*.dll" Condition="'$(Platform)' == 'x64'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../core/src/zig/lib/aarch64-windows/*.dll" Condition="'$(Platform)' == 'arm64'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../core/src/zig/lib/x86_64-macos/*.dylib" Condition="'$(Platform)' == 'x64'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../core/src/zig/lib/aarch64-macos/*.dylib" Condition="'$(Platform)' == 'arm64'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../core/src/zig/lib/x86_64-linux/*.so" Condition="'$(Platform)' == 'x64'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../core/src/zig/lib/aarch64-linux/*.so" Condition="'$(Platform)' == 'arm64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/x86_64-windows/*.dll" Condition="'$(Arch)' == 'X64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-windows/*.dll" Condition="'$(Arch)' == 'Arm64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/x86_64-macos/*.dylib" Condition="'$(Arch)' == 'X64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-macos/*.dylib" Condition="'$(Arch)' == 'Arm64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/x86_64-linux/*.so" Condition="'$(Arch)' == 'X64'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../core/src/zig/lib/aarch64-linux/*.so" Condition="'$(Arch)' == 'Arm64'" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="PrintVariables" AfterTargets="Build">
     <Message Text="Value of OS: $(OS)" Importance="high" />
     <Message Text="Value of Platform: $(Platform)" Importance="high" />
+    <Message Text="Value of RuntimeIdentifier: $(RuntimeIdentifier)" Importance="high" />
+    <Message Text="Value of IsLinux: $([MSBuild]::IsOSPlatform('Linux'))" Importance="high" />
+    <Message Text="Value of arch: $(Arch)" Importance="high" />
   </Target>
 </Project>
