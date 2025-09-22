@@ -92,5 +92,72 @@ public unsafe static partial class Zig
     [LibraryImport(LIB_NAME, EntryPoint = "setCursorPosition")]
     public static partial void SetCursorPosition(IntPtr renderer, UInt32 x, UInt32 y, [MarshalAs(UnmanagedType.I1)] bool visible);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "setCursorStyle")]
+    public static partial void SetCursorStyle(IntPtr renderer, IntPtr style, Int64 styleLen, [MarshalAs(UnmanagedType.I1)] bool blinking);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "setCursorColor")]
+    public static partial void SetCursorColor(IntPtr renderer, IntPtr color);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "setDebugOverlay")]
+    public static partial void SetDebugOverlay(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool enabled, byte corner);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "clearTerminal")]
+    public static partial void ClearTerminal(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawSuperSampleBuffer")]
+    public static partial void BufferDrawSuperSampleBuffer(IntPtr buffer, UInt32 x, UInt32 y, IntPtr pixelData, UInt64 len, byte format, UInt32 alignedBytesPerRow);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawPackedBuffer")]
+    public static partial void BufferDrawPackedBuffer(IntPtr buffer, IntPtr data, UInt64 dataLen, UInt32 posX, UInt32 posY, UInt32 terminalWidthCells, UInt32 terminalHeightCells);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawBox")]
+    public static partial void BufferDrawBox(IntPtr buffer, Int32 x, Int32 y, UInt32 width, UInt32 height, IntPtr borderChars, UInt32 packedOptions, IntPtr borderColor, IntPtr backgroundColor, IntPtr title, UInt32 titleLen);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "addToHitGrid")]
+    public static partial void AddToHitGrid(IntPtr renderer, Int32 x, Int32 y, UInt32 width, UInt32 height, UInt32 id);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "checkHit")]
+    public static partial UInt32 CheckHit(IntPtr renderer, UInt32 x, UInt32 y);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "dumpHitGrid")]
+    public static partial void DumpHitGrid(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "dumpBuffers")]
+    public static partial void DumpBuffers(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "dumpStdoutBuffer")]
+    public static partial void DumpStdoutBuffer(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "enableMouse")]
+    public static partial void EnableMouse(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool enabled);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "disableMouse")]
+    public static partial void DisableMouse(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "enableKittyKeyboard")]
+    public static partial void EnableKittyKeyboard(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool enabled);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "disableKittyKeyboard")]
+    public static partial void DisableKittyKeyboard(IntPtr renderer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "setupTerminal" )]
+    public static partial void SetupTerminal(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool useAlternateScreen);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "createTextBuffer")]
+    public static partial IntPtr CreateTextBuffer(UInt32 length, byte widthMethod);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "destroyTextBuffer")]
+    public static partial void DestroyTextBuffer(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetCharPtr")]
+    public static partial IntPtr TextBufferGetCharPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetFgPtr")]
+    public static partial IntPtr TextBufferGetFgPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetBgPtr")]
+    public static partial IntPtr TextBufferGetBgPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetAttributesPtr")]
+    public static partial IntPtr TextBufferGetAttributesPtr(IntPtr textBuffer);
 }
