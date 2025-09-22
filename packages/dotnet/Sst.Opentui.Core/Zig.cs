@@ -160,4 +160,64 @@ public unsafe static partial class Zig
 
     [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetAttributesPtr")]
     public static partial IntPtr TextBufferGetAttributesPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLength")]
+    public static partial UInt32 TextBufferGetLength(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferSetCell")]
+    public static partial void TextBufferSetCell(IntPtr textBuffer, UInt32 index, UInt32 char_code, IntPtr fg, IntPtr bg, UInt16 attr);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferConcat")]
+    public static partial IntPtr TextBufferConcat(IntPtr tb1, IntPtr tb2);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferResize")]
+    public static partial void TextBufferResize(IntPtr textBuffer, UInt32 newLength);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferReset")]
+    public static partial void TextBufferReset(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferSetSelection")]
+    public static partial void TextBufferSetSelection(IntPtr textBuffer, UInt32 start, UInt32 end, IntPtr bgColor, IntPtr fgColor);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferResetSelection")]
+    public static partial void TextBufferResetSelection(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferSetDefaultFg")]
+    public static partial void TextBufferSetDefaultFg(IntPtr textBuffer, IntPtr fg);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferSetDefaultBg")]
+    public static partial void TextBufferSetDefaultBg(IntPtr textBuffer, IntPtr bg);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferSetDefaultAttributes")]
+    public static partial void TextBufferSetDefaultAttributes(IntPtr textBuffer, byte attr);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferResetDefaults")]
+    public static partial void TextBufferResetDefaults(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferWriteChunk")]
+    public static partial UInt32 TextBufferWriteChunk(IntPtr textBuffer, IntPtr textBytes, UInt32 textLen, IntPtr fg, IntPtr bg, byte attr);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetCapacity")]
+    public static partial UInt32 TextBufferGetCapacityb(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferFinalizeLineInfo")]
+    public static partial void TextBufferFinalizeLineInfo(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLineStartsPtr")]
+    public static partial IntPtr TextBufferGetLineStartsPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLineWidthsPtr")]
+    public static partial IntPtr TextBufferGetLineWidthsPtr(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLineCount")]
+    public static partial UInt32 TextBufferGetLineCount(IntPtr textBuffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawTextBuffer")]
+    public static partial void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, Int32 x, Int32 y, Int32 clipX, Int32 clipY, UInt32 clipWidth, UInt32 clipHeight, [MarshalAs(UnmanagedType.I1)] bool hasClipRect);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "getTerminalCapabilities")]
+    public static partial void GetTerminalCapabilities(IntPtr renderer, IntPtr caps);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "getTerminalType")]
+    public static partial IntPtr GetTerminalType(IntPtr renderer, IntPtr response, UInt64 responseLen);
 }
