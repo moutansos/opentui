@@ -1,7 +1,21 @@
-using System;
 using System.Text.RegularExpressions;
 
 namespace Sst.Opentui.Core;
+
+public enum CursorStyle
+{
+  Block = 0,
+  Line = 1,
+  Underline = 2,
+}
+
+public enum DebugOverlayCorner
+{
+  TopLeft = 0,
+  TopRight = 1,
+  BottomLeft = 2,
+  BottomRight = 3,
+}
 
 public class Rgba
 {
