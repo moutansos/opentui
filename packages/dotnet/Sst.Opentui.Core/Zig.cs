@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Sst.Opentui.Core;
 
 namespace Sst.Opentui.Core;
 
@@ -129,7 +130,7 @@ public unsafe static partial class Zig
     public static partial void DumpStdoutBuffer(IntPtr renderer);
 
     [LibraryImport(LIB_NAME, EntryPoint = "enableMouse")]
-    public static partial void EnableMouse(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool enabled);
+    public static partial void EnableMouse(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool enableMovement);
 
     [LibraryImport(LIB_NAME, EntryPoint = "disableMouse")]
     public static partial void DisableMouse(IntPtr renderer);
@@ -220,4 +221,56 @@ public unsafe static partial class Zig
 
     [LibraryImport(LIB_NAME, EntryPoint = "getTerminalType")]
     public static partial IntPtr GetTerminalType(IntPtr renderer, IntPtr response, UInt64 responseLen);
+}
+
+public record BufferResizeVals(UInt32[] character, float[] fg, float[] bg, byte[] attributes);
+
+public interface IRenderLib
+{
+    public IntPtr CreateRenderer(int width, int height);
+    public void DestroyRenderer(IntPtr renderer, bool useAlternateScreen, int splitHeight);
+    public void SetUseThread(IntPtr renderer, bool useThread);
+    public void SetBackgroundColor(IntPtr renderer, Rgba color);
+    public void SetRenderOffset(IntPtr renderer, int offset);
+    public void UpdateStats(IntPtr renderer, int time, int fps, int frameCallbackTime);
+    public void UpdateMemoryStats(IntPtr renderer, int heapUsed, int heapTotal, int arrayBuffers);
+    public void Render(IntPtr renderer, bool force);
+    public OptomizedBuffer GenNextBuffer(IntPtr renderer);
+    public OptomizedBuffer GetCurrentBuffer(IntPtr renderer);
+    public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false);
+    public void DestroyOptimizedBuffer(IntPtr buffer);
+    public void DrawFrameBuffer(IntPtr targetBufferPtr, int destX, int destY, IntPtr bufferPtr, int? sourceX, int? sourceY, int? sourceWidth, int? sourceHeight);
+    public int GetBufferWidth(IntPtr buffer);
+    public int GetBufferHeight(IntPtr buffer);
+    public void BufferClear(IntPtr buffer, Rgba color);
+    public IntPtr BufferGetCharPtr(IntPtr buffer);
+    public IntPtr BufferGetFgPtr(IntPtr buffer);
+    public IntPtr BufferGetBgPtr(IntPtr buffer);
+    public IntPtr BufferGetAttributesPtr(IntPtr buffer);
+    public bool BufferGetRespectAlpha(IntPtr buffer);
+    public void BufferSetRespectAlpha(IntPtr buffer, bool respectAlpha);
+    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes);
+    public void BufferSetCellWithAlphaBlending(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes);
+    public void BufferFillRect(IntPtr buffer, int x, int y, int width, int height, Rgba color);
+    public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow);
+    public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells);
+    public void BufferDrawBox(IntPtr buffer, int x, int y, int width, int height, UInt32[] borderChars, byte packedOptions, Rgba borderColor, Rgba backgroundColor, string? title);
+    public BufferResizeVals BufferResize(IntPtr buffer, int width, int height);
+    public void ResizeRenderer(IntPtr renderer, int width, int height);
+    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible);
+    public void SetCursorStyle(IntPtr renderer, CursorStyle style, bool blinking);
+    public void SetCursorColor(IntPtr renderer, Rgba color);
+    public void SetDebugOverlay(IntPtr renderer, bool enabled, DebugOverlayCorner corner);
+    public void ClearTerminal(IntPtr renderer);
+    public void AddToHitGrid(IntPtr renderer, int x, int y, int width, int height, int id);
+    public int CheckHit(IntPtr renderer, int x, int y);
+    public void DumpHitGrid(IntPtr renderer);
+    public void DumpBuffers(IntPtr renderer);
+    public void DumpStdoutBuffer(IntPtr renderer);
+    public void EnableMouse(IntPtr renderer, bool enableMovement);
+    public void DisableMouse(IntPtr renderer);
+    public void EnableKittyKeyboard(IntPtr renderer, byte flags);
+    public void DisableKittyKeyboard(IntPtr renderer);
+    public void SetupTerminal(IntPtr renderer, bool useAlternateScreen);
+    // public TextBuffer
 }

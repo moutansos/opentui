@@ -1,6 +1,4 @@
-using Sst.Opentui.Core;
-
-namespace packages.dotnet.Sst.Opentui.Core;
+namespace Sst.Opentui.Core;
 
 internal struct BufferData
 {
@@ -13,8 +11,8 @@ internal struct BufferData
 public class OptomizedBuffer
 {
   private static int fbIdCounter = 0; 
-  public string id; //TODO: Maybe make this private with a getter?
-  //public RenderLib lib; //TODO: Maybe make this private with a getter?
+  private string id;
+  public IRenderLib lib; //TODO: Maybe make this private with a getter?
   private IntPtr bufferPtr;
   private BufferData buffer;
   private int width;
