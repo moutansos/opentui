@@ -6,13 +6,13 @@ namespace packages.dotnet.Sst.Opentui.Core;
 public class TextChunk
 {
     internal bool isChunk = true;
-    public UInt16[] Text { get; set; }
+    public byte[] Text { get; set; }
     public string PlainText { get; set; }
     public Rgba? Fg;
     public Rgba? Bg;
     public byte? Attributes;
 
-    public TextChunk(UInt16[] text,
+    public TextChunk(byte[] text,
                      string plainText,
                      Rgba? fg = null,
                      Rgba? bg = null,
