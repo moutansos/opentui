@@ -17,6 +17,32 @@ public enum DebugOverlayCorner
   BottomRight = 3,
 }
 
+public enum TextAttribute
+{
+  Bold = 1 << 0,
+  Dim = 1 << 1,
+  Italic = 1 << 2,
+  Underline = 1 << 3,
+  Blink = 1 << 4,
+  Inverse = 1 << 5,
+  Hidden = 1 << 6,
+  Strikethrough = 1 << 7,
+  DoubleUnderline = 1 << 8,
+}
+
+public static class TextAttributeExtensions
+{
+  public static bool IsBold(this TextAttribute attr) => (attr & TextAttribute.Bold) != 0;
+  public static bool IsDim(this TextAttribute attr) => (attr & TextAttribute.Dim) != 0;
+  public static bool IsItalic(this TextAttribute attr) => (attr & TextAttribute.Italic) != 0;
+  public static bool IsUnderline(this TextAttribute attr) => (attr & TextAttribute.Underline) != 0;
+  public static bool IsBlink(this TextAttribute attr) => (attr & TextAttribute.Blink) != 0;
+  public static bool IsInverse(this TextAttribute attr) => (attr & TextAttribute.Inverse) != 0;
+  public static bool IsHidden(this TextAttribute attr) => (attr & TextAttribute.Hidden) != 0;
+  public static bool IsStrikethrough(this TextAttribute attr) => (attr & TextAttribute.Strikethrough) != 0;
+  public static bool IsDoubleUnderline(this TextAttribute attr) => (attr & TextAttribute.DoubleUnderline) != 0;
+}
+
 public class Rgba
 {
   private float[] buffer;
