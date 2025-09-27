@@ -13,6 +13,32 @@ public class StyleAttrs
     public bool? Dim { get; set; }
     public bool? Reverse { get; set; }
     public bool? Blink { get; set; }
+
+    public TextAttribute ToTextAttributeFlags()
+    {
+        TextAttribute flags = 0;
+        if (Bold == true) flags |= TextAttribute.Bold;
+        if (Dim == true) flags |= TextAttribute.Dim;
+        if (Italic == true) flags |= TextAttribute.Italic;
+        if (Underline == true) flags |= TextAttribute.Underline;
+        if (Blink == true) flags |= TextAttribute.Blink;
+        if (Reverse == true) flags |= TextAttribute.Inverse;
+        if (Strikethrough == true) flags |= TextAttribute.Strikethrough;
+        return flags;
+    }
+
+    public byte ToTextAttributeByte()
+    {
+        byte flags = 0;
+        if (Bold == true) flags |= (byte)TextAttribute.Bold;
+        if (Dim == true) flags |= (byte)TextAttribute.Dim;
+        if (Italic == true) flags |= (byte)TextAttribute.Italic;
+        if (Underline == true) flags |= (byte)TextAttribute.Underline;
+        if (Blink == true) flags |= (byte)TextAttribute.Blink;
+        if (Reverse == true) flags |= (byte)TextAttribute.Inverse;
+        if (Strikethrough == true) flags |= (byte)TextAttribute.Strikethrough;
+        return flags;
+    }
 }
 
 public class StyledText
@@ -109,13 +135,151 @@ public class StyledText
         return new StyledText(new TextChunk[] { chunk });
     }
 
-    private static TextChunk ApplyStyle(TextChunk input, StyleAttrs style)
+    internal static TextChunk ApplyStyle(TextChunk input, StyleAttrs style)
     {
         Rgba? fg = style.Fg ?? input.Fg;
         Rgba? bg = style.Bg ?? input.Bg;
         
-        throw new NotImplementedException(); //TODO: Pick up here
+        TextChunk newChunk = input.WithStyleApplied(
+            fg: fg,
+            bg: bg,
+            attributes: style.ToTextAttributeByte()
+        );
+
+        return newChunk;
     }
+
+    internal static TextChunk ApplyStyle(int input, StyleAttrs style)
+    {
+        string str = input.ToString();
+        TextChunk chunk = new TextChunk(
+            text: System.Text.Encoding.UTF8.GetBytes(str),
+            plainText: str
+        );
+        return ApplyStyle(chunk, style);
+    }
+
+    internal static TextChunk ApplyStyle(bool input, StyleAttrs style)
+    {
+        string str = input.ToString();
+        TextChunk chunk = new TextChunk(
+            text: System.Text.Encoding.UTF8.GetBytes(str),
+            plainText: str
+        );
+        return ApplyStyle(chunk, style);
+    }
+
+    internal static TextChunk ApplyStyle(string input, StyleAttrs style)
+    {
+        TextChunk chunk = new TextChunk(
+            text: System.Text.Encoding.UTF8.GetBytes(input),
+            plainText: input
+        );
+        return ApplyStyle(chunk, style);
+    }
+}
+
+public static class ColorFunctions
+{
+    #region Regular Colors
+    public static TextChunk Black(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("black") });
+    public static TextChunk Black(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("black") });
+    public static TextChunk Black(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("black") });
+    public static TextChunk Black(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("black") });
+
+    public static TextChunk Red(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("red") });
+    public static TextChunk Red(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("red") });
+    public static TextChunk Red(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("red") });
+    public static TextChunk Red(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("red") });
+
+    public static TextChunk Green(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("green") });
+    public static TextChunk Green(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("green") });
+    public static TextChunk Green(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("green") });
+    public static TextChunk Green(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("green") });
+
+    public static TextChunk Yellow(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("yellow") });
+    public static TextChunk Yellow(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("yellow") });
+    public static TextChunk Yellow(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("yellow") });
+    public static TextChunk Yellow(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("yellow") });
+
+    public static TextChunk Blue(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("blue") });
+    public static TextChunk Blue(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("blue") });
+    public static TextChunk Blue(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("blue") });
+    public static TextChunk Blue(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("blue") });
+
+    public static TextChunk Magenta(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("magenta") });
+    public static TextChunk Magenta(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("magenta") });
+    public static TextChunk Magenta(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("magenta") });
+    public static TextChunk Magenta(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("magenta") });
+
+    public static TextChunk Cyan(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("cyan") });
+    public static TextChunk Cyan(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("cyan") });
+    public static TextChunk Cyan(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("cyan") });
+    public static TextChunk Cyan(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("cyan") });
+
+    public static TextChunk White(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("white") });
+    public static TextChunk White(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("white") });
+    public static TextChunk White(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("white") });
+    public static TextChunk White(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("white") });
+    #endregion
+
+    #region Bright Colors
+    public static TextChunk BrightBlack(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlack") });
+    public static TextChunk BrightBlack(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlack") });
+    public static TextChunk BrightBlack(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlack") });
+    public static TextChunk BrightBlack(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlack") });
+
+    public static TextChunk BrightRed(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightRed") });
+    public static TextChunk BrightRed(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightRed") });
+    public static TextChunk BrightRed(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightRed") });
+    public static TextChunk BrightRed(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightRed") });
+
+    public static TextChunk BrightGreen(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightGreen") });
+    public static TextChunk BrightGreen(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightGreen") });
+    public static TextChunk BrightGreen(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightGreen") });
+    public static TextChunk BrightGreen(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightGreen") });
+
+    public static TextChunk BrightYellow(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightYellow") });
+    public static TextChunk BrightYellow(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightYellow") });
+    public static TextChunk BrightYellow(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightYellow") });
+    public static TextChunk BrightYellow(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightYellow") });
+
+    public static TextChunk BrightBlue(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlue") });
+    public static TextChunk BrightBlue(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlue") });
+    public static TextChunk BrightBlue(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlue") });
+    public static TextChunk BrightBlue(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightBlue") });
+
+    public static TextChunk BrightMagenta(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightMagenta") });
+    public static TextChunk BrightMagenta(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightMagenta") });
+    public static TextChunk BrightMagenta(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightMagenta") });
+    public static TextChunk BrightMagenta(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightMagenta") });
+
+    public static TextChunk BrightCyan(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightCyan") });
+    public static TextChunk BrightCyan(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightCyan") });
+    public static TextChunk BrightCyan(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightCyan") });
+    public static TextChunk BrightCyan(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightCyan") });
+
+    public static TextChunk BrightWhite(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightWhite") });
+    public static TextChunk BrightWhite(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightWhite") });
+    public static TextChunk BrightWhite(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightWhite") });
+    public static TextChunk BrightWhite(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Fg = Rgba.ParseColor("brightWhite") });
+    #endregion
+
+    #region Background Colors
+    
+    public static TextChunk BgBlack(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("black") });
+    public static TextChunk BgBlack(int input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("black") });
+    public static TextChunk BgBlack(bool input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("black") });
+    public static TextChunk BgBlack(TextChunk input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("black") });
+
+    public static TextChunk BgRed(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("red") });
+    public static TextChunk BgGreen(string input) => StyledText.ApplyStyle(input, new StyleAttrs { Bg = Rgba.ParseColor("green") });
+
+    #endregion
+
+
+
+    //TODO: Finish all the color functions
 }
 
 public abstract record StylableInput

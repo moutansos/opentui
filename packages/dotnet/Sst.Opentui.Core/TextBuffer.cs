@@ -24,6 +24,23 @@ public class TextChunk
         this.Bg = bg;
         this.Attributes = attributes;
     }
+
+    public TextChunk WithStyleApplied(Rgba? fg = null,
+                                      Rgba? bg = null,
+                                      byte? attributes = null)
+    {
+        byte? newAttributes =
+            attributes is null && this.Attributes is null ? null :
+            attributes is null ? this.Attributes :
+            this.Attributes is null ? attributes :
+                (byte)(attributes.Value | this.Attributes.Value);
+
+        return new TextChunk(this.Text,
+                             this.PlainText,
+                             fg ?? this.Fg,
+                             bg ?? this.Bg,
+                             newAttributes);
+    }
 }
 
 public class TextBuffer
