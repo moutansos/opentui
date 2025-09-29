@@ -12,12 +12,12 @@ internal struct MemorySnapshot
 public class CliRenderer 
 {
   private static int animationFrameId = 0;
-  //private RenderLib lib;
+  private IRenderLib lib;
   private StreamReader stdin;
   private StreamWriter stdout;
   private bool exitOnCtrlC;
   private bool isDestroyed;
-  //private OptimizedBuffer nextRenderBuffer;
+  // private OptimizedBuffer nextRenderBuffer;
   //private OptimizedBuffer currentRenderBuffer;
   private bool isRunning;
   private int targetFps;
@@ -34,21 +34,21 @@ public class CliRenderer
   // private IEnumerable<Action<OptomizedBuffer, int>> postProcessFns;
   private Rgba backgroundColor;
 
-  // protected CliRenderer(
-  //   StreamReader stdin,
-  //   StreamWriter stdout
-  // ) {
-  //   this.isDestroyed = false;
-  //   this.isRunning = false;
-  //   this.targetFps = 30;
-  //   this.lastMemorySnapshot = new MemorySnapshot
-  //   {
-  //     heapUsed = 0,
-  //     heapTotal = 0,
-  //     arryayBuffers = 0
-  //   };
-  //   this.useThread = false;
-  //   this.frameTimes = Enumerable.Empty<int>();
-  //   this.postProcessFns = Enumerable.Empty<Action<OptomizedBuffer, int>>();
-  // }
+  protected CliRenderer(
+    StreamReader stdin,
+    StreamWriter stdout
+  ) {
+    this.isDestroyed = false;
+    this.isRunning = false;
+    this.targetFps = 30;
+    this.lastMemorySnapshot = new MemorySnapshot
+    {
+      heapUsed = 0,
+      heapTotal = 0,
+      arryayBuffers = 0
+    };
+    this.useThread = false;
+    this.frameTimes = Enumerable.Empty<int>();
+    // this.postProcessFn = Enumerable.Empty<Action<OptomizedBuffer, int>>();
+  }
 }
