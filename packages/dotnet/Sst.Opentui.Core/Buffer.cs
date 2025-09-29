@@ -8,6 +8,8 @@ internal struct BufferData
   public short[] attributes;
 }
 
+public record BufferOptions(bool? RespectAlpha = null);
+
 public class OptomizedBuffer
 {
   private static int fbIdCounter = 0; 
@@ -20,12 +22,18 @@ public class OptomizedBuffer
   public bool respectAlpha;
   public bool useFfi;
 
-  // public OptomiizedBuffer()
-  // {
-  //   this.id = $"fb_{fbIdCounter++}";
-  //   this.respectAlpha = false;
-  //   this.useFfi = true;
-  // }
+  internal OptomizedBuffer(IRenderLib lib, IntPtr ptr, BufferData buffer, int width, int height, BufferOptions? options = null)
+  {
+    this.id = $"fb_{fbIdCounter++}";
+    this.lib = lib;
+    this.bufferPtr = ptr;
+    this.useFfi = true;
+    this.respectAlpha = options?.RespectAlpha ?? false;
+
+    this.buffer = buffer;
+    this.width = width;
+    this.height = height;
+  }
 
   public IntPtr Ptr => this.bufferPtr;
 
