@@ -1,6 +1,4 @@
-using Sst.Opentui.Core;
-
-namespace packages.dotnet.Sst.Opentui.Core.Lib;
+namespace Sst.Opentui.Core.Lib;
 
 public class StyleAttrs
 {

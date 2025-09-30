@@ -1,7 +1,6 @@
-using packages.dotnet.Sst.Opentui.Core.Lib;
-using Sst.Opentui.Core;
+using Sst.Opentui.Core.Lib;
 
-namespace packages.dotnet.Sst.Opentui.Core;
+namespace Sst.Opentui.Core;
 
 public class TextChunk
 {

@@ -1,4 +1,4 @@
-namespace packages.dotnet.Sst.Opentui.Core;
+namespace Sst.Opentui.Core;
 
 internal static class Utils
 {
