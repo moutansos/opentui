@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Sst.Opentui.Core;
 
 namespace Sst.Opentui.Core;
 
@@ -223,7 +222,8 @@ public unsafe static partial class Zig
     public static partial IntPtr GetTerminalType(IntPtr renderer, IntPtr response, UInt64 responseLen);
 }
 
-public record BufferResizeVals(UInt32[] character, float[] fg, float[] bg, byte[] attributes);
+public record TextBufferArrays(UInt32[] character, float[] fg, float[] bg, byte[] attributes);
+public record ClipRect(int x, int y, int width, int height);
 
 public interface IRenderLib
 {
@@ -255,7 +255,7 @@ public interface IRenderLib
     public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow);
     public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells);
     public void BufferDrawBox(IntPtr buffer, int x, int y, int width, int height, UInt32[] borderChars, byte packedOptions, Rgba borderColor, Rgba backgroundColor, string? title);
-    public BufferResizeVals BufferResize(IntPtr buffer, int width, int height);
+    public TextBufferArrays BufferResize(IntPtr buffer, int width, int height);
     public void ResizeRenderer(IntPtr renderer, int width, int height);
     public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible);
     public void SetCursorStyle(IntPtr renderer, CursorStyle style, bool blinking);
@@ -272,5 +272,41 @@ public interface IRenderLib
     public void EnableKittyKeyboard(IntPtr renderer, byte flags);
     public void DisableKittyKeyboard(IntPtr renderer);
     public void SetupTerminal(IntPtr renderer, bool useAlternateScreen);
-    // public TextBuffer
+
+    //TextBuffer methods
+    public TextBuffer CreateTextBuffer(int capacity, WidthMethod widthMethod);
+    public void DestroyTextBuffer(IntPtr buffer);
+    public IntPtr TextBufferGetCharPtr(IntPtr buffer);
+    public IntPtr TextBufferGetFgPtr(IntPtr buffer);
+    public IntPtr TextBufferGetBgPtr(IntPtr buffer);
+    public IntPtr TextBufferGetAttributesPtr(IntPtr buffer);
+    public int TextBufferGetLength(IntPtr buffer);
+    public void TextBufferSetCell(IntPtr buffer, int index, char character, Rgba color, Rgba bgColor, byte attributes);
+    public TextBuffer TextBufferConcat(IntPtr buffer1, IntPtr buffer2);
+    public TextBufferArrays TextBufferResize(IntPtr buffer, int newLength); 
+    public void TextBufferReset(IntPtr buffer);
+    public void TextBufferSetSelection(IntPtr buffer, int start, int end, Rgba? bgColor, Rgba? fgColor);
+    public void TextBufferResetSelection(IntPtr buffer);
+    public void TextBufferSetDefaultFg(IntPtr buffer, Rgba? color);
+    public void TextBufferSetDefaultBg(IntPtr buffer, Rgba? color);
+    public void TextBufferSetDefaultAttributes(IntPtr buffer, byte? attributes);
+    public void TextBufferResetDefaults(IntPtr buffer);
+    public int TextBufferWriteChunk(IntPtr buffer, string text, Rgba? fg, Rgba? bg, byte? attributes);
+    public int TextBufferGetCapacity(IntPtr buffer);
+    public void TextBufferFinalizeLineInfo(IntPtr buffer);
+    public IntPtr TextBufferGetLineInfo(IntPtr buffer);
+    public TextBufferArrays GetTextBufferArrays(IntPtr buffer, int size);
+    public void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, int x, int y, ClipRect? clipRect);
+
+    public dynamic GetTerminalCapabilities(IntPtr renderer);
+    public void ProcessCapabilityRespponse(IntPtr renderer, string response);
+}
+
+public class FFIRenderLib : IRenderLib
+{
+    public FFIRenderLib() { }
+
+    public IntPtr CreateRenderer(int width, int height) => Zig.CreateRenderer((UInt32)width, (UInt32)height);
+
+    //TODO: Implement the rest of the IRenderLib methods
 }
