@@ -308,5 +308,18 @@ public class FFIRenderLib : IRenderLib
 
     public IntPtr CreateRenderer(int width, int height) => Zig.CreateRenderer((UInt32)width, (UInt32)height);
 
+    public void DestroyRenderer(IntPtr renderer, bool useAlternateScreen, int splitHeight) =>
+      Zig.DestroyRenderer(renderer, useAlternateScreen, (UInt32)splitHeight);
+
+    public void SetUseThread(IntPtr renderer, bool useThread) => Zig.SetUseThread(renderer, useThread);
+
+    public void SetBackgroundColor(IntPtr renderer, Rgba color)
+    {
+        float[] rawArray = color.ToRawArray();
+        IntPtr colorPtr = Marshal.AllocHGlobal(Marshal.SizeOf<float>() * rawArray.Length);
+        Marshal.Copy(rawArray, 0, colorPtr, rawArray.Length);
+        Zig.SetBackgroundColor(renderer, colorPtr);
+    }
+
     //TODO: Implement the rest of the IRenderLib methods
 }

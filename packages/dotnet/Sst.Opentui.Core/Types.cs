@@ -45,7 +45,7 @@ public static class TextAttributeExtensions
 
 public class Rgba
 {
-  private float[] buffer;
+  internal float[] buffer;
 
   public Rgba(float[] buffer)
   {
@@ -207,6 +207,8 @@ public class Rgba
 
     throw new ArgumentException($"Unknown color format: {colorString}");
   }
+
+  public float[] ToRawArray() => this.buffer;
 }
 
 public enum WidthMethod
