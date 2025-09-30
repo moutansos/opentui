@@ -9,4 +9,4 @@ Zig.ClearTerminal(renderer);
 Console.WriteLine("Hello, World!");
 
 Console.ReadKey();
-Zig.DestroyRenderer(renderer, false, 0);
+Zig.DestroyRenderer(renderer, false, 0
