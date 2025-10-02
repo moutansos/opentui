@@ -1,12 +1,6 @@
 namespace Sst.Opentui.Core;
 
-internal struct BufferData
-{
-  public UInt32[] charArray;
-  public float[] fg;
-  public float[] bg;
-  public short[] attributes;
-}
+public record BufferData(UInt32[] charArray, float[] fg, float[] bg, byte[] attributes);
 
 public record BufferOptions(bool? RespectAlpha = null);
 

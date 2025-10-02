@@ -216,3 +216,5 @@ public enum WidthMethod
   ArcWidth = 0,
   Unicode = 1,
 }
+
+public record LineInfo(int[] LineStarts, int[] LineWidths);
