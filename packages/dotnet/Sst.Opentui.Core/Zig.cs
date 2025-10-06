@@ -399,9 +399,13 @@ public class FFIRenderLib : IRenderLib
         return new BufferData(charArray, fg, bg, attributes);
     }
 
+    public void BufferClear(IntPtr buffer, Rgba color) => Zig.BufferClear(buffer, color.ToRawArrayPtr());
     public int GetBufferWidth(IntPtr buffer) => (int)Zig.GetBufferWidth(buffer);
-
     public int GetBufferHeight(IntPtr buffer) => (int)Zig.GetBufferHeight(buffer);
+    public IntPtr BufferGetCharPtr(IntPtr buffer) => Zig.BufferGetCharPtr(buffer);
+    public IntPtr BufferGetFgPtr(IntPtr buffer) => Zig.BufferGetFgPtr(buffer);
+    public IntPtr BufferGetBgPtr(IntPtr buffer) => Zig.BufferGetBgPtr(buffer);
+    public IntPtr BufferGetAttributesPtr(IntPtr buffer) => Zig.BufferGetAttributesPtr(buffer);
 
     public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false)
     {
