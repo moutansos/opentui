@@ -281,8 +281,8 @@ public interface IRenderLib
     public void AddToHitGrid(IntPtr renderer, int x, int y, int width, int height, int id);
     public int CheckHit(IntPtr renderer, int x, int y);
     public void DumpHitGrid(IntPtr renderer);
-    public void DumpBuffers(IntPtr renderer);
-    public void DumpStdoutBuffer(IntPtr renderer);
+    public void DumpBuffers(IntPtr renderer, DateTime? timestamp = null);
+    public void DumpStdoutBuffer(IntPtr renderer, DateTime? timestamp = null);
     public void EnableMouse(IntPtr renderer, bool enableMovement);
     public void DisableMouse(IntPtr renderer);
     public void EnableKittyKeyboard(IntPtr renderer, byte flags);
@@ -310,12 +310,12 @@ public interface IRenderLib
     public int TextBufferWriteChunk(IntPtr buffer, string text, Rgba? fg, Rgba? bg, byte? attributes);
     public int TextBufferGetCapacity(IntPtr buffer);
     public void TextBufferFinalizeLineInfo(IntPtr buffer);
-    public IntPtr TextBufferGetLineInfo(IntPtr buffer);
+    public LineInfo TextBufferGetLineInfo(IntPtr buffer);
     public BufferData GetTextBufferArrays(IntPtr buffer, int size);
     public void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, int x, int y, ClipRect? clipRect);
 
-    public dynamic GetTerminalCapabilities(IntPtr renderer);
-    public void ProcessCapabilityRespponse(IntPtr renderer, string response);
+    public TerminalCapabilities GetTerminalCapabilities(IntPtr renderer);
+    public void ProcessCapabilityResponse(IntPtr renderer, string response);
 }
 
 public class FFIRenderLib : IRenderLib
@@ -493,6 +493,40 @@ public class FFIRenderLib : IRenderLib
 
     public int TextBufferGetLength(IntPtr buffer) => (int)Zig.TextBufferGetLength(buffer);
 
+    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes)
+    {
+        byte[] textBytes = buffer.GetBytes();
+        int textLength = textBytes.length;
+        float[] bg = bgColor?.buffer;
+        float[] fg = color.buffer;
+
+        Zig.BufferDrawText(buffer, textBytes, textLength, x, y, fg, bg, attributes ?? 0);
+    }
+
+    public void ResizeRenderer(IntPtr renderer, int width, int height) => Zig.ResizeRenderer(renderer, width, height);
+
+    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, x, y, visible);
+    
+    public void SetCursorStyle(IntPtr renderer, CursorStyle cursorStyle, bool blinking)
+    {
+        string styleStr = cursorStyle switch 
+        {
+            CursorStyle.Block => "block",
+            CursorStyle.Line => "line",
+            CursorStyle.Underline => "underline",
+        };
+
+        byte[] styleBytes = styleStr.GetBytes();
+        int styleLen = styleBytes.length;
+        
+        IntPtr stylePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * styleLen);
+        Marshal.Copy(styleBytes, 0, stylePtr, 4);
+
+        Zig.SetCursorStyle(renderer, stylePtr, styleLen, blinking);
+    }
+
+    public void SetCursorColor(IntPtr renderer, Rgba color) => Zig.SetCursorColor(renderer, force);
+
     public void TextBufferSetCell(IntPtr buffer, int index, char character, Rgba color, Rgba bgColor, byte attributes)
     {
       IntPtr colorPtr = Marshal.AllocHGlobal(Marshal.SizeOf<float>() * 4);
@@ -525,6 +559,37 @@ public class FFIRenderLib : IRenderLib
         return this.GetTextBuffer(buffer, newLength);
     }
 
+    public void BufferDrawBox(IntPtr buffer, 
+                              int x, 
+                              int y, 
+                              int width, 
+                              int height, 
+                              UInt32[] borderChars, 
+                              byte packedOptions, 
+                              Rgba borderColor, 
+                              Rgba backgroundColor, 
+                              string? title)
+    {
+        IntPtr title = IntPtr.Zero;
+        if(title is not null)
+        {
+            byte[]? titleBytes = title?.GetBytes();
+            int titleLen = titleBytes.length;
+            IntPtr titlePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * titleLen);
+            Marshal.Copy(titleBytes
+        }
+
+        Zig.BufferDrawBox(buffer, x, y, width, height, borderChars, packedOptions, borderColor.buffer, backgroundColor.buffer, titlePtr);
+    }
+
+    public BufferData BufferResize(IntPtr buffer, int width, int height)
+    {
+        Zig.BufferResize(buffer, width, height);
+        return this.GetBufffer(buffer, width * heigh);
+    }
+
+    public void TextBufferReset(IntPtr buffer) => Zig.TextBufferReset(buffer);
+
     public void TextBufferSetSelection(IntPtr buffer, int start, int end, Rgba? bgColor, Rgba? fgColor)
     {
         IntPtr bgColorPtr = bgColor is null ? IntPtr.Zero : bgColor.ToRawArrayPtr();
@@ -532,6 +597,8 @@ public class FFIRenderLib : IRenderLib
 
         Zig.TextBufferSetSelection(buffer, (UInt32)start, (UInt32)end, bgColorPtr, fgColorPtr);
     }
+
+    public void TextBufferResetSelection(IntPtr buffer) => Zig.TextBufferResetSelection(buffer);
 
     public void TextBufferSetDefaultFg(IntPtr buffer, Rgba? color)
     {
@@ -596,7 +663,9 @@ public class FFIRenderLib : IRenderLib
         return new BufferData(charArray, fgArray, bgArray, attributesArray);
     }
 
-    public void BufferDrawText(IntPtr buffer, IntPtr textBuffer, int x, int y, ClipRect? clipRect)
+    public BufferData GetTextBufferArrays(IntPtr buffer, int size) => this.GetTextBuffer(buffer, size);
+
+    public void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, int x, int y, ClipRect? clipRect)
     {
         if (clipRect is null)
         {
@@ -647,5 +716,11 @@ public class FFIRenderLib : IRenderLib
                                         Sync,
                                         BracketedPaste,
                                         Hyperlinks);
+    }
+
+    public void ProcessCapabilityResponse(IntPtr renderer, string response)
+    { 
+        byte[] responesBytes = response.GetBytes();
+        Zig.ProcessCapabilityResponse(renderer, responseBytes, responseBytes.length);
     }
 }
