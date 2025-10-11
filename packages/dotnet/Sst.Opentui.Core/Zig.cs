@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Sst.Opentui.Core;
 
@@ -495,17 +496,28 @@ public class FFIRenderLib : IRenderLib
 
     public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes)
     {
-        byte[] textBytes = buffer.GetBytes();
-        int textLength = textBytes.length;
-        float[] bg = bgColor?.buffer;
+        UTF8Encoding encoding = new();
+        byte[] textBytes = encoding.GetBytes(text);
+        int textLength = textBytes.Length;
+        float[]? bg = bgColor?.buffer;
         float[] fg = color.buffer;
 
-        Zig.BufferDrawText(buffer, textBytes, textLength, x, y, fg, bg, attributes ?? 0);
+        IntPtr textPtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * textLength);
+        Marshal.Copy(textBytes, 0, textPtr, textLength);
+
+        IntPtr bgPtr = bg is null ? IntPtr.Zero : Marshal.AllocHGlobal(Marshal.SizeOf<float>() * bg.Length);
+        if (bg is not null)
+            Marshal.Copy(bg, 0, bgPtr, bg.Length);
+
+        IntPtr fgPtr = Marshal.AllocHGlobal(Marshal.SizeOf<float>() * fg.Length);
+        Marshal.Copy(fg, 0, fgPtr, fg.Length);
+
+        Zig.BufferDrawText(buffer, textPtr, textLength, Convert.ToUInt32(x), Convert.ToUInt32(y), fgPtr, bgPtr, attributes ?? 0);
     }
 
-    public void ResizeRenderer(IntPtr renderer, int width, int height) => Zig.ResizeRenderer(renderer, width, height);
+    public void ResizeRenderer(IntPtr renderer, int width, int height) => Zig.ResizeRenderer(renderer, Convert.ToUInt32(width), Convert.ToUInt32(height));
 
-    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, x, y, visible);
+    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, Convert.ToUInt32(x), Convert.ToUnixTimeMilliseconds, visible));
     
     public void SetCursorStyle(IntPtr renderer, CursorStyle cursorStyle, bool blinking)
     {
