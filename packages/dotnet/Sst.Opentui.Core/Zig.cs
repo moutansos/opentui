@@ -517,7 +517,7 @@ public class FFIRenderLib : IRenderLib
 
     public void ResizeRenderer(IntPtr renderer, int width, int height) => Zig.ResizeRenderer(renderer, Convert.ToUInt32(width), Convert.ToUInt32(height));
 
-    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, Convert.ToUInt32(x), Convert.ToUnixTimeMilliseconds, visible));
+    public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, Convert.ToUInt32(x), Convert.ToUInt32(y), visible);
     
     public void SetCursorStyle(IntPtr renderer, CursorStyle cursorStyle, bool blinking)
     {
