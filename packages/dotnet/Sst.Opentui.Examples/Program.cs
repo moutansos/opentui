@@ -1,12 +1,34 @@
 using Sst.Opentui.Core;
 
-// See https://aka.ms/new-console-template for more information
+IRenderLib renderLib = new FFIRenderLib();
 
-IntPtr renderer = Zig.CreateRenderer(800, 600);
-Zig.ClearTerminal(renderer);
+IntPtr renderer = renderLib.CreateRenderer(100, 20);
+renderLib.SetBackgroundColor(renderer, Rgba.FromValues(0.1f, 0.1f, 0.3f));
+renderLib.ClearTerminal(renderer);
 
-//Probably draw with renderer here instead at some point
-Console.WriteLine("Hello, World!");
+OptomizedBuffer buffer = renderLib.GetNextBuffer(renderer);
+renderLib.BufferClear(buffer.Ptr, Rgba.FromValues(0.1f, 0.1f, 0.3f));
+renderLib.BufferDrawText(buffer.Ptr, "Hello world!", 3, 3, Rgba.FromInts(0, 255, 255), Rgba.FromInts(0, 0, 0));
+
+BoxOptions opts = new(
+    Sides: BorderSides.All,
+    Fill: true,
+    TitleAlignment: TextAliignment.Left,
+    BorderChars: BoxOptions.DefaultBorderChars,
+    Title: "< My Box >");
+
+renderLib.BufferDrawBox(
+    buffer: buffer.Ptr, 
+    x: 10, 
+    y: 10, 
+    width: 20, 
+    height: 5, 
+    options: opts,
+    Rgba.FromInts(255, 0, 0), 
+    Rgba.FromInts(0, 0, 0)
+    );
+
+renderLib.Render(renderer, force: true);
 
 Console.ReadKey();
-Zig.DestroyRenderer(renderer, false, 0
+renderLib.DestroyRenderer(renderer, false, 0);
