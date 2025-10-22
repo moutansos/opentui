@@ -1,3 +1,4 @@
+
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -221,6 +222,9 @@ public unsafe static partial class Zig
 
     [LibraryImport(LIB_NAME, EntryPoint = "getTerminalType")]
     public static partial IntPtr GetTerminalType(IntPtr renderer, IntPtr response, UInt64 responseLen);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "processCapabilityResponse")]
+    public static partial void ProcessCapabilityResponse(IntPtr renderer, IntPtr response, UInt64 responseLen);
 }
 
 public record ClipRect(int x, int y, int width, int height);
@@ -251,7 +255,7 @@ public interface IRenderLib
     public void SetRenderOffset(IntPtr renderer, int offset);
     public void UpdateStats(IntPtr renderer, int time, int fps, int frameCallbackTime);
     public void UpdateMemoryStats(IntPtr renderer, int heapUsed, int heapTotal, int arrayBuffers);
-    public void Render(IntPtr renderer, bool force);
+    public void Render(IntPtr renderer, bool force = false);
     public OptomizedBuffer GetNextBuffer(IntPtr renderer);
     public OptomizedBuffer GetCurrentBuffer(IntPtr renderer);
     public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false);
@@ -266,12 +270,12 @@ public interface IRenderLib
     public IntPtr BufferGetAttributesPtr(IntPtr buffer);
     public bool BufferGetRespectAlpha(IntPtr buffer);
     public void BufferSetRespectAlpha(IntPtr buffer, bool respectAlpha);
-    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes);
+    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes = null);
     public void BufferSetCellWithAlphaBlending(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes);
     public void BufferFillRect(IntPtr buffer, int x, int y, int width, int height, Rgba color);
     public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow);
     public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells);
-    public void BufferDrawBox(IntPtr buffer, int x, int y, int width, int height, UInt32[] borderChars, byte packedOptions, Rgba borderColor, Rgba backgroundColor, string? title);
+    public void BufferDrawBox(IntPtr buffer, int x, int y, int width, int height, BoxOptions options, Rgba borderColor, Rgba backgroundColor);
     public BufferData BufferResize(IntPtr buffer, int width, int height);
     public void ResizeRenderer(IntPtr renderer, int width, int height);
     public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible);
@@ -332,10 +336,7 @@ public class FFIRenderLib : IRenderLib
 
     public void SetBackgroundColor(IntPtr renderer, Rgba color)
     {
-        float[] rawArray = color.ToRawArray();
-        IntPtr colorPtr = Marshal.AllocHGlobal(Marshal.SizeOf<float>() * rawArray.Length);
-        Marshal.Copy(rawArray, 0, colorPtr, rawArray.Length);
-        Zig.SetBackgroundColor(renderer, colorPtr);
+        Zig.SetBackgroundColor(renderer, color.ToRawArrayPtr());
     }
 
     public void SetRenderOffset(IntPtr renderer, int offset) => Zig.SetRenderOffset(renderer, (UInt32)offset);
@@ -346,7 +347,7 @@ public class FFIRenderLib : IRenderLib
     public void UpdateMemoryStats(IntPtr renderer, int heapUsed, int heapTotal, int arrayBuffers) =>
       Zig.UpdateMemoryStats(renderer, (UInt32)heapUsed, (UInt32)heapTotal, (UInt32)arrayBuffers);
 
-    public void Render(IntPtr renderer, bool force) => Zig.Render(renderer, force);
+    public void Render(IntPtr renderer, bool force = false) => Zig.Render(renderer, force);
 
     public OptomizedBuffer GetNextBuffer(IntPtr renderer)
     {
@@ -494,7 +495,7 @@ public class FFIRenderLib : IRenderLib
 
     public int TextBufferGetLength(IntPtr buffer) => (int)Zig.TextBufferGetLength(buffer);
 
-    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes)
+    public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes = null)
     {
         UTF8Encoding encoding = new();
         byte[] textBytes = encoding.GetBytes(text);
@@ -515,6 +516,12 @@ public class FFIRenderLib : IRenderLib
         Zig.BufferDrawText(buffer, textPtr, textLength, Convert.ToUInt32(x), Convert.ToUInt32(y), fgPtr, bgPtr, attributes ?? 0);
     }
 
+    public void BufferSetCellWithAlphaBlending(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes) =>
+      Zig.BufferSetCellWithAlphaBlending(buffer, (UInt32)x, (UInt32)y, (UInt32)character, color.ToRawArrayPtr(), bgColor.ToRawArrayPtr(), attributes);
+
+    public void BufferFillRect(IntPtr buffer, int x, int y, int width, int height, Rgba color) =>
+      Zig.BufferFillRect(buffer, Convert.ToUInt32(x), Convert.ToUInt32(y), Convert.ToUInt32(width), Convert.ToUInt32(height), color.ToRawArrayPtr());
+    
     public void ResizeRenderer(IntPtr renderer, int width, int height) => Zig.ResizeRenderer(renderer, Convert.ToUInt32(width), Convert.ToUInt32(height));
 
     public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible) => Zig.SetCursorPosition(renderer, Convert.ToUInt32(x), Convert.ToUInt32(y), visible);
@@ -526,10 +533,11 @@ public class FFIRenderLib : IRenderLib
             CursorStyle.Block => "block",
             CursorStyle.Line => "line",
             CursorStyle.Underline => "underline",
+            _ => throw new ArgumentOutOfRangeException(nameof(cursorStyle), "Invalid cursor style")
         };
 
-        byte[] styleBytes = styleStr.GetBytes();
-        int styleLen = styleBytes.length;
+        byte[] styleBytes = System.Text.Encoding.UTF8.GetBytes(styleStr);
+        int styleLen = styleBytes.Length;
         
         IntPtr stylePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * styleLen);
         Marshal.Copy(styleBytes, 0, stylePtr, 4);
@@ -537,7 +545,7 @@ public class FFIRenderLib : IRenderLib
         Zig.SetCursorStyle(renderer, stylePtr, styleLen, blinking);
     }
 
-    public void SetCursorColor(IntPtr renderer, Rgba color) => Zig.SetCursorColor(renderer, force);
+    public void SetCursorColor(IntPtr renderer, Rgba color) => Zig.SetCursorColor(renderer, color.ToRawArrayPtr());
 
     public void TextBufferSetCell(IntPtr buffer, int index, char character, Rgba color, Rgba bgColor, byte attributes)
     {
@@ -576,28 +584,46 @@ public class FFIRenderLib : IRenderLib
                               int y, 
                               int width, 
                               int height, 
-                              UInt32[] borderChars, 
-                              byte packedOptions, 
+                              BoxOptions options, 
                               Rgba borderColor, 
-                              Rgba backgroundColor, 
-                              string? title)
+                              Rgba backgroundColor)
     {
-        IntPtr title = IntPtr.Zero;
-        if(title is not null)
+        IntPtr titlePtr = IntPtr.Zero;
+        int titleLen = -1;
+        if(options.Title is not null)
         {
-            byte[]? titleBytes = title?.GetBytes();
-            int titleLen = titleBytes.length;
-            IntPtr titlePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * titleLen);
-            Marshal.Copy(titleBytes
+            byte[] titleBytes = System.Text.Encoding.UTF8.GetBytes(options.Title);
+            titleLen = titleBytes.Length;
+            titlePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * titleLen);
+            Marshal.Copy(titleBytes, 0, titlePtr, titleLen);
         }
 
-        Zig.BufferDrawBox(buffer, x, y, width, height, borderChars, packedOptions, borderColor.buffer, backgroundColor.buffer, titlePtr);
+        IntPtr borderCharsPtr = options.BorderChars is null ? IntPtr.Zero : options.BorderChars.ToRawArrayPtr();
+
+        Zig.BufferDrawBox(
+            buffer: buffer, 
+            x: x, 
+            y: y, 
+            width: Convert.ToUInt32(width), 
+            height: Convert.ToUInt32(height), 
+            borderChars: borderCharsPtr, 
+            packedOptions: options.ToPackedOptions(),
+            borderColor: borderColor.ToRawArrayPtr(),
+            backgroundColor: backgroundColor.ToRawArrayPtr(), 
+            title: titlePtr, 
+            titleLen: (UInt32)(titleLen == -1 ? 0 : titleLen));
     }
+
+    public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells) =>
+      Zig.BufferDrawPackedBuffer(buffer, dataPtr, Convert.ToUInt32(dataLen), Convert.ToUInt32(posX), Convert.ToUInt32(posY), Convert.ToUInt32(terminalWidthCells), Convert.ToUInt32(terminalHeightCells));
+
+    public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow) =>
+      Zig.BufferDrawSuperSampleBuffer(buffer, Convert.ToUInt32(x), Convert.ToUInt32(y), pixelDataPtr, Convert.ToUInt64(pixelDataLenth), 0, Convert.ToUInt32(alignedBytesPerRow));
 
     public BufferData BufferResize(IntPtr buffer, int width, int height)
     {
-        Zig.BufferResize(buffer, width, height);
-        return this.GetBufffer(buffer, width * heigh);
+        Zig.BufferResize(buffer, Convert.ToUInt32(width), Convert.ToUInt32(height));
+        return this.GetBuffer(buffer, width * height);
     }
 
     public void TextBufferReset(IntPtr buffer) => Zig.TextBufferReset(buffer);
@@ -732,7 +758,9 @@ public class FFIRenderLib : IRenderLib
 
     public void ProcessCapabilityResponse(IntPtr renderer, string response)
     { 
-        byte[] responesBytes = response.GetBytes();
-        Zig.ProcessCapabilityResponse(renderer, responseBytes, responseBytes.length);
+        byte[] responseBytes = System.Text.Encoding.UTF8.GetBytes(response);
+        IntPtr responseBytesPtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * responseBytes.Length);
+        Marshal.Copy(responseBytes, 0, responseBytesPtr, responseBytes.Length);
+        Zig.ProcessCapabilityResponse(renderer, responseBytesPtr, Convert.ToUInt32(responseBytes.Length));
     }
 }

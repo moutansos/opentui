@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Sst.Opentui.Core;
@@ -218,3 +219,49 @@ public enum WidthMethod
 }
 
 public record LineInfo(int[] LineStarts, int[] LineWidths);
+
+public record BorderSides(
+    bool Top,
+    bool Right,
+    bool Bottom,
+    bool Left
+)
+{
+    public static BorderSides All => new BorderSides(true, true, true, true);
+    public static BorderSides None => new BorderSides(false, false, false, false);
+}
+
+public enum TextAliignment
+{
+    Left = 0,
+    Center = 1,
+    Right = 2,
+}
+
+public record BoxOptions(
+    BorderSides Sides,
+    bool Fill,
+    TextAliignment TitleAlignment,
+    char[] BorderChars,
+    string? Title = null
+)
+{
+    public static readonly char[] DefaultBorderChars = new char[] 
+    { 
+      '┌', '┐', 
+      '└', '┘', 
+      '─', '│',
+    };
+
+    internal UInt32 ToPackedOptions()
+    {
+        UInt32 packed = 0;
+        if (Sides.Top) packed |= 0b1000;
+        if (Sides.Right) packed |= 0b0100;
+        if (Sides.Bottom) packed |= 0b0010;
+        if (Sides.Left) packed |= 0b0001;
+        if (Fill) packed |= 1 << 4;
+        packed |= Convert.ToUInt32(((int)TitleAlignment)&0b11) << 5;
+        return packed;
+    }
+}
