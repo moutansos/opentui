@@ -118,6 +118,9 @@ public unsafe static partial class Zig
     [LibraryImport(LIB_NAME, EntryPoint = "clearTerminal")]
     public static partial void ClearTerminal(IntPtr renderer);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "setTerminalTitle")]
+    public static partial void SetTerminalTitle(IntPtr renderer, IntPtr title, UInt64 titleLen);
+
     [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawSuperSampleBuffer")]
     public static partial void BufferDrawSuperSampleBuffer(IntPtr buffer, UInt32 x, UInt32 y, IntPtr pixelData, UInt64 len, byte format, UInt32 alignedBytesPerRow);
 
@@ -297,6 +300,7 @@ public interface IRenderLib
     public void SetCursorColor(IntPtr renderer, Rgba color);
     public void SetDebugOverlay(IntPtr renderer, bool enabled, DebugOverlayCorner corner);
     public void ClearTerminal(IntPtr renderer);
+    public void SetTerminalTitle(IntPtr renderer, string title);
     public void AddToHitGrid(IntPtr renderer, int x, int y, int width, int height, int id);
     public int CheckHit(IntPtr renderer, int x, int y);
     public void DumpHitGrid(IntPtr renderer);
@@ -511,6 +515,14 @@ public class FFIRenderLib : IRenderLib
       Zig.SetDebugOverlay(renderer, enabled, (byte)corner);
 
     public void ClearTerminal(IntPtr renderer) => Zig.ClearTerminal(renderer);
+
+    public void SetTerminalTitle(IntPtr renderer, string title)
+    {
+        byte[] titleBytes = Encoding.UTF8.GetBytes(title);
+        IntPtr titlePtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * titleBytes.Length);
+        Marshal.Copy(titleBytes, 0, titlePtr, titleBytes.Length);
+        Zig.SetTerminalTitle(renderer, titlePtr, (UInt64)titleBytes.Length);
+    }
 
     public void AddToHitGrid(IntPtr renderer, int x, int y, int width, int height, int id) =>
       Zig.AddToHitGrid(renderer, (Int32)x, (Int32)y, (UInt32)width, (UInt32)height, (UInt32)id);

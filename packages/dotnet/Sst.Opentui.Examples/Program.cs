@@ -29,6 +29,7 @@ renderLib.BufferDrawBox(
 );
 
 renderLib.BufferSetCell(buffer.Ptr, 20, 1, '@', Rgba.FromInts(0, 255, 0), Rgba.FromInts(0, 0, 255), 0);
+renderLib.SetTerminalTitle(renderer, "My opentui Renderer");
 
 renderLib.Render(renderer, force: true);
 
