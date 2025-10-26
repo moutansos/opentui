@@ -253,6 +253,13 @@ public record BoxOptions(
       '─', '│',
     };
 
+    public static readonly char[] RoundedBorderChars = new char[] 
+    { 
+      '╭', '╮', 
+      '╰', '╯', 
+      '─', '│',
+    };
+
     internal UInt32 ToPackedOptions()
     {
         UInt32 packed = 0;

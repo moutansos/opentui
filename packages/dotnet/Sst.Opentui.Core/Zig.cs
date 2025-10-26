@@ -1,6 +1,6 @@
-
 using System.Runtime.InteropServices;
 using System.Text;
+using static Sst.Opentui.Core.Zig;
 
 namespace Sst.Opentui.Core;
 
@@ -9,8 +9,14 @@ public unsafe static partial class Zig
 {
     public const string LIB_NAME = "opentui";
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void LogCallback(int level, IntPtr msgPtr, UInt128 msgLen);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "setLogCallback")]
+    public static partial void SetLogCallback(LogCallback callback);
+
     [LibraryImport(LIB_NAME, EntryPoint = "createRenderer")]
-    public static partial IntPtr CreateRenderer(UInt32 width, UInt32 height);
+    public static partial IntPtr CreateRenderer(UInt32 width, UInt32 height, [MarshalAs(UnmanagedType.I1)] bool testing = false);
 
     [LibraryImport(LIB_NAME, EntryPoint = "destroyRenderer")]
     public static partial void DestroyRenderer(IntPtr renderer, [MarshalAs(UnmanagedType.I1)] bool useAlternateScreen, UInt32 splitHeight);
@@ -40,7 +46,7 @@ public unsafe static partial class Zig
     public static partial IntPtr GetCurrentBuffer(IntPtr renderer);
 
     [LibraryImport(LIB_NAME, EntryPoint = "createOptimizedBuffer")]
-    public static partial IntPtr CreateOptimizedBuffer(UInt32 width, UInt32 height, [MarshalAs(UnmanagedType.I1)] bool respectAlpha, UInt16 widthMethod);
+    public static partial IntPtr CreateOptimizedBuffer(UInt32 width, UInt32 height, [MarshalAs(UnmanagedType.I1)] bool respectAlpha, UInt16 widthMethod, IntPtr id, UInt64 idLen);
 
     [LibraryImport(LIB_NAME, EntryPoint = "destroyOptimizedBuffer")]
     public static partial void DestroyOptimizedBuffer(IntPtr buffer);
@@ -76,11 +82,17 @@ public unsafe static partial class Zig
     [LibraryImport(LIB_NAME, EntryPoint = "bufferSetRespectAlpha")]
     public static partial void BufferSetRespectAlpha(IntPtr buffer, [MarshalAs(UnmanagedType.I1)] bool respectAlpha);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferGetId")]
+    public static partial UInt64 BufferGetId(IntPtr buffer, IntPtr id, UInt64 idLen);
+
     [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawText")]
     public static partial void BufferDrawText(IntPtr buffer, IntPtr text, Int64 textLen, UInt32 x, UInt32 y, IntPtr fg, IntPtr bg, byte attributes);
 
     [LibraryImport(LIB_NAME, EntryPoint = "bufferSetCellWithAlphaBlending")]
     public static partial void BufferSetCellWithAlphaBlending(IntPtr buffer, UInt32 x, UInt32 y, UInt32 char_code, IntPtr fg, IntPtr bg, byte attributes);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferSetCell")]
+    public static partial void BufferSetCell(IntPtr buffer, UInt32 x, UInt32 y, UInt32 char_code, IntPtr color, IntPtr bgColor, byte attributes);
 
     [LibraryImport(LIB_NAME, EntryPoint = "bufferFillRect")]
     public static partial void BufferFillRect(IntPtr buffer, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr bg);
@@ -248,7 +260,7 @@ public record TerminalCapabilities(bool KittyKeyboard,
                                    bool Hyperlinks);
 public interface IRenderLib
 {
-    public IntPtr CreateRenderer(int width, int height);
+    public IntPtr CreateRenderer(int width, int height, bool testing = false);
     public void DestroyRenderer(IntPtr renderer, bool useAlternateScreen, int splitHeight);
     public void SetUseThread(IntPtr renderer, bool useThread);
     public void SetBackgroundColor(IntPtr renderer, Rgba color);
@@ -258,7 +270,7 @@ public interface IRenderLib
     public void Render(IntPtr renderer, bool force = false);
     public OptomizedBuffer GetNextBuffer(IntPtr renderer);
     public OptomizedBuffer GetCurrentBuffer(IntPtr renderer);
-    public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false);
+    public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false, string? id = "unnamed buffer");
     public void DestroyOptimizedBuffer(IntPtr buffer);
     public void DrawFrameBuffer(IntPtr targetBufferPtr, int destX, int destY, IntPtr bufferPtr, int? sourceX, int? sourceY, int? sourceWidth, int? sourceHeight);
     public int GetBufferWidth(IntPtr buffer);
@@ -270,8 +282,10 @@ public interface IRenderLib
     public IntPtr BufferGetAttributesPtr(IntPtr buffer);
     public bool BufferGetRespectAlpha(IntPtr buffer);
     public void BufferSetRespectAlpha(IntPtr buffer, bool respectAlpha);
+    public string BufferGetId(IntPtr buffer);
     public void BufferDrawText(IntPtr buffer, string text, int x, int y, Rgba color, Rgba? bgColor, byte? attributes = null);
     public void BufferSetCellWithAlphaBlending(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes);
+    public void BufferSetCell(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes);
     public void BufferFillRect(IntPtr buffer, int x, int y, int width, int height, Rgba color);
     public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow);
     public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells);
@@ -325,9 +339,59 @@ public interface IRenderLib
 
 public class FFIRenderLib : IRenderLib
 {
-    public FFIRenderLib() { }
+    private bool loggingSetup = false;
 
-    public IntPtr CreateRenderer(int width, int height) => Zig.CreateRenderer((UInt32)width, (UInt32)height);
+    public FFIRenderLib() 
+    {
+        this.SetupLogging();
+    }
+
+    //TODO: Maybe maybe a logger that can be used from the Microsoft.Extensions.Logging namespace?
+    private void SetupLogging()
+    {
+        if (this.loggingSetup)
+            return;
+
+        LogCallback callback = (int level, IntPtr msgPtr, UInt128 msgLen) =>
+        {
+          try
+          {
+              if (msgLen == 0 || msgPtr == IntPtr.Zero)
+                  return;
+
+              byte[] msgBuffer = new byte[(long)msgLen];
+              Marshal.Copy(msgPtr, msgBuffer, 0, (int)msgLen);
+              string message = Encoding.UTF8.GetString(msgBuffer);
+              switch (level)
+              {
+                  case 0:
+                      Console.Error.WriteLine($"[ERROR] {message}");
+                      break;
+                  case 1:
+                      Console.Error.WriteLine($"[WARN] {message}");
+                      break;
+                  case 2:
+                      Console.WriteLine($"[INFO] {message}");
+                      break;
+                  case 3:
+                      Console.WriteLine($"[DEBUG] {message}");
+                      break;
+                  default:
+                      Console.WriteLine($"[LOG] {message}");
+                      break;
+              }
+          }
+          catch (Exception ex)
+          {
+              Console.Error.WriteLine($"[LOG ERROR] Error in Zig log callback: {ex.Message}");
+          }
+        };
+
+        Zig.SetLogCallback(callback);
+        this.loggingSetup = true;
+    }
+
+    public IntPtr CreateRenderer(int width, int height, bool testing) => Zig.CreateRenderer((UInt32)width, (UInt32)height, testing);
 
     public void DestroyRenderer(IntPtr renderer, bool useAlternateScreen, int splitHeight) =>
       Zig.DestroyRenderer(renderer, useAlternateScreen, (UInt32)splitHeight);
@@ -409,12 +473,23 @@ public class FFIRenderLib : IRenderLib
     public IntPtr BufferGetBgPtr(IntPtr buffer) => Zig.BufferGetBgPtr(buffer);
     public IntPtr BufferGetAttributesPtr(IntPtr buffer) => Zig.BufferGetAttributesPtr(buffer);
 
-    public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false)
+    public OptomizedBuffer CreateOptimizedBuffer(int width, int height, WidthMethod widthMethod, bool respectAlpha = false, string? id = "unnamed buffer")
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentException("Width and height must be greater than zero");
 
-        IntPtr bufferPtr = Zig.CreateOptimizedBuffer((UInt32)width, (UInt32)height, respectAlpha, (UInt16)widthMethod);
+        IntPtr idPtr = IntPtr.Zero;
+        UInt64 idLen = 0;
+
+        if (id is not null)
+        {
+            byte[] idBytes = Encoding.UTF8.GetBytes(id);
+            idLen = (UInt64)idBytes.Length;
+            idPtr = Marshal.AllocHGlobal(Marshal.SizeOf<byte>() * idBytes.Length);
+            Marshal.Copy(idBytes, 0, idPtr, idBytes.Length);
+        }
+
+        IntPtr bufferPtr = Zig.CreateOptimizedBuffer((UInt32)width, (UInt32)height, respectAlpha, (UInt16)widthMethod, idPtr, idLen);
 
         if (bufferPtr == IntPtr.Zero)
             throw new Exception("Failed to create optimized buffer");
@@ -491,6 +566,25 @@ public class FFIRenderLib : IRenderLib
 
     public void BufferSetRespectAlpha(IntPtr buffer, bool respectAlpha) => Zig.BufferSetRespectAlpha(buffer, respectAlpha);
 
+    public string BufferGetId(IntPtr buffer)
+    {
+        const int MAX_ID_LENGTH = 256;
+        IntPtr idPtr = Marshal.AllocHGlobal(MAX_ID_LENGTH);
+        UInt64 idLen = Zig.BufferGetId(buffer, idPtr, (UInt64)MAX_ID_LENGTH);
+
+        if (idLen == 0)
+        {
+            Marshal.FreeHGlobal(idPtr);
+            return string.Empty;
+        }
+
+        byte[] idBytes = new byte[(long)idLen];
+        Marshal.Copy(idPtr, idBytes, 0, (int)idLen);
+        Marshal.FreeHGlobal(idPtr);
+
+        return Encoding.UTF8.GetString(idBytes);
+    }
+
     public int BufferGetWidth(IntPtr buffer) => (int)Zig.GetBufferWidth(buffer);
 
     public int TextBufferGetLength(IntPtr buffer) => (int)Zig.TextBufferGetLength(buffer);
@@ -518,6 +612,9 @@ public class FFIRenderLib : IRenderLib
 
     public void BufferSetCellWithAlphaBlending(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes) =>
       Zig.BufferSetCellWithAlphaBlending(buffer, (UInt32)x, (UInt32)y, (UInt32)character, color.ToRawArrayPtr(), bgColor.ToRawArrayPtr(), attributes);
+
+    public void BufferSetCell(IntPtr buffer, int x, int y, char character , Rgba color, Rgba bgColor, byte attributes) =>
+      Zig.BufferSetCell(buffer, Convert.ToUInt32(x), Convert.ToUInt32(y), Convert.ToUInt32(character), color.ToRawArrayPtr(), bgColor.ToRawArrayPtr(), attributes);
 
     public void BufferFillRect(IntPtr buffer, int x, int y, int width, int height, Rgba color) =>
       Zig.BufferFillRect(buffer, Convert.ToUInt32(x), Convert.ToUInt32(y), Convert.ToUInt32(width), Convert.ToUInt32(height), color.ToRawArrayPtr());

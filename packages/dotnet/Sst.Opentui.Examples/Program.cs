@@ -14,7 +14,7 @@ BoxOptions opts = new(
     Sides: BorderSides.All,
     Fill: true,
     TitleAlignment: TextAliignment.Left,
-    BorderChars: BoxOptions.DefaultBorderChars,
+    BorderChars: BoxOptions.RoundedBorderChars,
     Title: "< My Box >");
 
 renderLib.BufferDrawBox(
@@ -25,8 +25,10 @@ renderLib.BufferDrawBox(
     height: 5, 
     options: opts,
     Rgba.FromInts(255, 0, 0), 
-    Rgba.FromInts(0, 0, 0)
-    );
+    Rgba.FromInts(0, 0, 0, 0)
+);
+
+renderLib.BufferSetCell(buffer.Ptr, 20, 1, '@', Rgba.FromInts(0, 255, 0), Rgba.FromInts(0, 0, 255), 0);
 
 renderLib.Render(renderer, force: true);
 
