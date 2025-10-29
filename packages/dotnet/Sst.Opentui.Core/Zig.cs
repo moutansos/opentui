@@ -130,6 +130,15 @@ public unsafe static partial class Zig
     [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawBox")]
     public static partial void BufferDrawBox(IntPtr buffer, Int32 x, Int32 y, UInt32 width, UInt32 height, IntPtr borderChars, UInt32 packedOptions, IntPtr borderColor, IntPtr backgroundColor, IntPtr title, UInt32 titleLen);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferPushScissorRect")]
+    public static partial void BufferPushScissorRect(IntPtr buffer, Int32 x, Int32 y, UInt32 width, UInt32 height);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferPopScissorRect")]
+    public static partial void BufferPopScissorRect(IntPtr buffer);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "bufferClearScissorRects")]
+    public static partial void BufferClearScissorRects(IntPtr buffer);
+
     [LibraryImport(LIB_NAME, EntryPoint = "addToHitGrid")]
     public static partial void AddToHitGrid(IntPtr renderer, Int32 x, Int32 y, UInt32 width, UInt32 height, UInt32 id);
 
@@ -229,6 +238,12 @@ public unsafe static partial class Zig
     [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLineCount")]
     public static partial UInt32 TextBufferGetLineCount(IntPtr textBuffer);
 
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetLineInfoDirect")]
+    public static partial void TextBufferGetLineInfoDirect(IntPtr buffer, IntPtr lineStartsPtr, IntPtr lineWidthsPtr);
+
+    [LibraryImport(LIB_NAME, EntryPoint = "textBufferGetSelectionInfo")]
+    public static partial UInt64 TextBufferGetSelectionInfo(IntPtr buffer);
+
     [LibraryImport(LIB_NAME, EntryPoint = "bufferDrawTextBuffer")]
     public static partial void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, Int32 x, Int32 y, Int32 clipX, Int32 clipY, UInt32 clipWidth, UInt32 clipHeight, [MarshalAs(UnmanagedType.I1)] bool hasClipRect);
 
@@ -261,6 +276,7 @@ public record TerminalCapabilities(bool KittyKeyboard,
                                    bool Sync,
                                    bool BracketedPaste,
                                    bool Hyperlinks);
+public record SelectionInfo(int Start, int End);
 public interface IRenderLib
 {
     public IntPtr CreateRenderer(int width, int height, bool testing = false);
@@ -293,6 +309,9 @@ public interface IRenderLib
     public void BufferDrawSuperSampleBuffer(IntPtr buffer, int x, int y, IntPtr pixelDataPtr, int pixelDataLenth, int alignedBytesPerRow);
     public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells);
     public void BufferDrawBox(IntPtr buffer, int x, int y, int width, int height, BoxOptions options, Rgba borderColor, Rgba backgroundColor);
+    public void BufferPushScissorRect(IntPtr buffer, int x, int y, int width, int height);
+    public void BufferPopScissorRect(IntPtr buffer);
+    public void BufferClearScissorRects(IntPtr buffer);
     public BufferData BufferResize(IntPtr buffer, int width, int height);
     public void ResizeRenderer(IntPtr renderer, int width, int height);
     public void SetCursorPosition(IntPtr renderer, int x, int y, bool visible);
@@ -334,6 +353,7 @@ public interface IRenderLib
     public int TextBufferGetCapacity(IntPtr buffer);
     public void TextBufferFinalizeLineInfo(IntPtr buffer);
     public LineInfo TextBufferGetLineInfo(IntPtr buffer);
+    public SelectionInfo? TextBufferGetSelection(IntPtr buffer);
     public BufferData GetTextBufferArrays(IntPtr buffer, int size);
     public void BufferDrawTextBuffer(IntPtr buffer, IntPtr textBuffer, int x, int y, ClipRect? clipRect);
 
@@ -723,6 +743,13 @@ public class FFIRenderLib : IRenderLib
             titleLen: (UInt32)(titleLen == -1 ? 0 : titleLen));
     }
 
+    public void BufferPushScissorRect(IntPtr buffer, int x, int y, int width, int height) =>
+      Zig.BufferPushScissorRect(buffer, x, y, Convert.ToUInt32(width), Convert.ToUInt32(height));
+
+    public void BufferPopScissorRect(IntPtr buffer) => Zig.BufferPopScissorRect(buffer);
+
+    public void BufferClearScissorRects(IntPtr buffer) => Zig.BufferClearScissorRects(buffer);
+
     public void BufferDrawPackedBuffer(IntPtr buffer, IntPtr dataPtr, int dataLen, int posX, int posY, int terminalWidthCells, int terminalHeightCells) =>
       Zig.BufferDrawPackedBuffer(buffer, dataPtr, Convert.ToUInt32(dataLen), Convert.ToUInt32(posX), Convert.ToUInt32(posY), Convert.ToUInt32(terminalWidthCells), Convert.ToUInt32(terminalHeightCells));
 
@@ -773,7 +800,25 @@ public class FFIRenderLib : IRenderLib
     }
 
     public int TextBufferGetCapacity(IntPtr buffer) => (int)Zig.TextBufferGetCapacityb(buffer);
+
+    public int TextBufferGetLineCount(IntPtr buffer) => (int)Zig.TextBufferGetLineCount(buffer);
+
+    public void TextBufferGetLineInfoDirect(IntPtr buffer, IntPtr lineStartsPtr, IntPtr lineWidthsPtr) =>
+      Zig.TextBufferGetLineInfoDirect(buffer, lineStartsPtr, lineWidthsPtr);
+
     public void TextBufferFinalizeLineInfo(IntPtr buffer) => Zig.TextBufferFinalizeLineInfo(buffer);
+
+    public SelectionInfo? TextBufferGetSelection(IntPtr buffer)
+    {
+        UInt64 packedInfo = Zig.TextBufferGetSelectionInfo(buffer);
+
+        if (packedInfo == 0xffff_ffff_ffff_ffff)
+            return null;
+
+        int start = (int)(packedInfo >> 32);
+        int end = (int)(packedInfo & 0xFFFFFFFF);
+        return new SelectionInfo(start, end);
+    }
 
     public LineInfo TextBufferGetLineInfo(IntPtr buffer)
     {
