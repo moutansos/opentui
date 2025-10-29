@@ -34,7 +34,7 @@ jobs:
       - name: Build Zig library
         run: |
           cd packages/core/src/zig
-          zig build -Doptimize=ReleaseFast
+          zig build -Doptimize=ReleaseFast -femit-h
 
       - name: Upload library artifact
         uses: actions/upload-artifact@v4
