@@ -64,11 +64,12 @@ public class TextBuffer
     private int length = 0;
     private int capacity;
     private LineInfo lineInfo;
+    private bool destroyed = false;
 
-    public TextBuffer(IRenderLib lib,
-                      IntPtr ptr,
-                      BufferData buffer,
-                      int capacity)
+    internal TextBuffer(IRenderLib lib,
+                       IntPtr ptr,
+                       BufferData buffer,
+                       int capacity)
     {
         this.lib = lib;
         this.bufferPtr = ptr;
@@ -78,12 +79,17 @@ public class TextBuffer
 
     public static TextBuffer Create(WidthMethod widthMethod,  int capacity = 256)
     {
-        // Need to implement the FFI instance of Render Lib and add the loader before this will work
-        throw new NotImplementedException();
-
-        // const lib = resolveRenderLib()
-        // return lib.createTextBuffer(capacity, widthMethod)
+        IRenderLib lib = RenderLibProvider.GetRenderLib();
+        return lib.CreateTextBuffer(capacity, widthMethod);
     }
+    
+    private void Guard()
+    {
+        if (this.destroyed)
+            throw new ObjectDisposedException("TextBuffer has been destroyed");
+    }
+
+    // public void SetStyledText(StyledText text)
 
     private void SyncBuffersAfterResize()
     {

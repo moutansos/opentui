@@ -4,8 +4,7 @@ using static Sst.Opentui.Core.Zig;
 
 namespace Sst.Opentui.Core;
 
-//TODO: Make this insternal after testing
-public unsafe static partial class Zig
+internal unsafe static partial class Zig
 {
   public const string LIB_NAME = "opentui";
 
@@ -1017,4 +1016,18 @@ public class FFIRenderLib : IRenderLib
     Marshal.Copy(responseBytes, 0, responseBytesPtr, responseBytes.Length);
     Zig.ProcessCapabilityResponse(renderer, responseBytesPtr, Convert.ToUInt32(responseBytes.Length));
   }
+}
+
+public class RenderLibProvider
+{
+    private static IRenderLib? instance;
+
+    public static IRenderLib GetRenderLib()
+    {
+        if (instance == null)
+        {
+            instance = new FFIRenderLib();
+        }
+        return instance;
+    }
 }
